@@ -65,6 +65,17 @@ function removeAllItems() {
     }
 }
 
+function filterItems() {
+    const filterText = itemFilter.value.toLowerCase();
+    const items = itemList.querySelectorAll("li");
+
+    items.forEach((item) => {
+        item.style.display = item.textContent.toLowerCase().includes(filterText)
+            ? "flex"
+            : "none";
+    });
+}
+
 function setUiState() {
     const items = itemList.querySelectorAll("li");
 
@@ -81,5 +92,6 @@ function setUiState() {
 itemForm.addEventListener("submit", addItem);
 itemList.addEventListener("click", removeItem);
 clearBtn.addEventListener("click", removeAllItems);
+itemFilter.addEventListener("input", filterItems);
 
 setUiState();
