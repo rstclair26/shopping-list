@@ -3,16 +3,17 @@ const itemInput = document.getElementById("item-input");
 const itemList = document.getElementById("item-list");
 const clearBtn = document.getElementById("clear");
 const itemFilter = document.getElementById("filter");
+const itemInputButton = itemForm.querySelector("button");
+let isEditMode = false;
 
 function displayItems() {
     const itemsFromStorage = getItemsFromStorage();
-
     itemsFromStorage.forEach((item) => addItemToDOM(item));
 
     setUiState();
 }
 
-function onAddItemSubmit(e) {
+function onItemSubmit(e) {
     e.preventDefault();
 
     const newItem = itemInput.value;
@@ -23,15 +24,19 @@ function onAddItemSubmit(e) {
         return;
     }
 
-    // Create item DOM element
-    addItemToDOM(newItem);
+    if (isEditMode) {
+        const itemToEdit = itemList.querySelector(".edit-mode");
+        updateItem(itemToEdit, newItem);
+        isEditMode = false;
+    } else {
+        // Create item DOM element
+        addItemToDOM(newItem);
 
-    // Add item to storage
-    addItemToStorage(newItem);
+        // Add item to storage
+        addItemToStorage(newItem);
 
-    setUiState();
-
-    itemInput.value = "";
+        setUiState();
+    }
 }
 
 function addItemToDOM(item) {
@@ -62,6 +67,24 @@ function createIcon(classes) {
     return icon;
 }
 
+function updateItem(item, newValue) {
+    let itemsFromStorage = getItemsFromStorage();
+    const oldValue = item.firstChild.textContent;
+
+    // Update item in storage
+    itemsFromStorage.forEach((value, index, array) => {
+        if (array[index] === oldValue) array[index] = newValue;
+    });
+
+    localStorage.setItem("items", JSON.stringify(itemsFromStorage));
+
+    // Update item in DOM
+    item.firstChild.textContent = newValue;
+    item.classList.remove("edit-mode");
+
+    setUiState();
+}
+
 function addItemToStorage(item) {
     let itemsFromStorage = getItemsFromStorage();
 
@@ -84,10 +107,28 @@ function getItemsFromStorage() {
 }
 
 function onItemClick(e) {
-    // Check if delete button was clicked
+    // Check whether item name or delete button was clicked
     if (e.target.parentElement.classList.contains("remove-item")) {
         removeItem(e.target.parentElement.parentElement);
+    } else {
+        setItemToEdit(e.target);
     }
+}
+
+function setItemToEdit(item) {
+    isEditMode = true;
+
+    // Reset all items to non-edit display mode
+    itemList
+        .querySelectorAll("li")
+        .forEach((i) => i.classList.remove("edit-mode"));
+
+    // Set selected item to edit display mode and put the value into the input field
+    item.classList.add("edit-mode");
+    itemInputButton.innerHTML = "<i class='fa-solid fa-pen'></i> Update Item";
+    itemInputButton.style.backgroundColor = "green";
+    itemInput.value = item.textContent;
+    itemInput.focus();
 }
 
 function removeItem(item) {
@@ -148,11 +189,18 @@ function setUiState() {
         clearBtn.style.display = "block";
         itemFilter.style.display = "block";
     }
+
+    itemInputButton.innerHTML = "<i class='fa-solid fa-plus'></i> Add Item";
+    itemInputButton.style.backgroundColor = "#333";
+
+    itemInput.value = "";
+
+    isEditMode = false;
 }
 
 function init() {
     // Event listeners
-    itemForm.addEventListener("submit", onAddItemSubmit);
+    itemForm.addEventListener("submit", onItemSubmit);
     itemList.addEventListener("click", onItemClick);
     clearBtn.addEventListener("click", removeAllItems);
     itemFilter.addEventListener("input", filterItems);
