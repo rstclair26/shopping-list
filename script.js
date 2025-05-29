@@ -20,7 +20,7 @@ function onItemSubmit(e) {
 
     // Validate input
     if (newItem === "") {
-        alert("Please enter an item");
+        alert("Please enter an item.");
         return;
     }
 
@@ -29,6 +29,10 @@ function onItemSubmit(e) {
         updateItem(itemToEdit, newItem);
         isEditMode = false;
     } else {
+        if (checkIfItemExists(newItem)) {
+            alert("This item already exists - try again.");
+            return;
+        }
         // Create item DOM element
         addItemToDOM(newItem);
 
@@ -113,6 +117,11 @@ function onItemClick(e) {
     } else {
         setItemToEdit(e.target);
     }
+}
+
+function checkIfItemExists(item) {
+    const itemsFromStorage = getItemsFromStorage();
+    return itemsFromStorage.includes(item);
 }
 
 function setItemToEdit(item) {
